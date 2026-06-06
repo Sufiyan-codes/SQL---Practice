@@ -1,0 +1,84 @@
+-- DAY 2 :- DDL & DML COMMANDS
+
+------------------------- DDL (Data Definition Language) --------------------------------
+
+-- 1) CREATE :- Use to create table in a datbase
+CREATE TABLE persons
+(
+	id INT NOT NULL, 
+	person_name VARCHAR(20),
+	birth_date DATE,
+	phone VARCHAR(10) NOT NULL
+);
+SELECT * FROM PERSONS;
+
+
+-- 2) ALTER :- Used to modify or change the table
+/*
+	Note :- The table will have new column at the end.
+			there's no way to add a column in middle of table.
+*/
+ALTER TABLE PERSONS ADD email VARCHAR(50);
+SELECT * FROM PERSONS;
+ALTER TABLE PERSONS DROP COLUMN phone; -- used to delete the column.
+
+
+-- DELETE :- Used to delete table and Columns
+ALTER TABLE PERSONS DROP COLUMN email;
+DROP TABLE PERSONS; -- This will delete the table from DataBase.
+
+
+------------------------- DML (Data Manipulation Language) --------------------------------
+
+-- 1) INSERT :- Used to insert values in a table.
+--- Manual way to insert ---
+SELECT * FROM CUSTOMERS;
+INSERT INTO CUSTOMERS (id, first_name, country, score) values
+	(6,'Anna','USA',NULL),
+	(7,'Sam',NULL,100);
+/*
+	Note :- No of values entered should be same as column
+			mentioned in the query if column is specified. 
+*/
+-- INSERT using SELECT ---
+/*
+	copy data from customers table into persons
+*/
+SELECT * FROM PERSONS; -- Check what data we have to enter  
+SELECT id, first_name, NULL, 'UNKNOWN' FROM customers; -- Use static (fixed values) select for column like phone and birth_date.
+
+INSERT INTO persons(id, person_name, birth_date, phone)
+	SELECT id, first_name, NULL, 'UNKNOWN' 
+	FROM customers;
+/*
+	NOTE :- Don't use "VALUES" when copying data from a table to another using insert and select.
+*/
+
+
+-- 2) UPDATE :- Used to update/modify the table data
+UPDATE CUSTOMERS SET score = 0 WHERE id=6;
+SELECT * FROM CUSTOMERS;
+/*
+	Note :- 1. Always use where to avoid updating all rows unintentionally
+			2. Best practice is to check the row before update
+			   to check use select query with where clause 
+*/
+SELECT * FROM CUSTOMERS WHERE id = 7; -- CHECK BEFORE UPDATE
+UPDATE CUSTOMERS SET score = 0, country = 'UK' WHERE id = 7;\
+SELECT * FROM CUSTOMERS WHERE score IS NULL;
+UPDATE CUSTOMERS SET score = 0 WHERE score IS NULL;
+/*
+	Note :- Use 'IS NULL OR NOT NULL' in where condition
+*/
+
+
+-- 3) DELETE :- Use to delete rows in a table
+DELETE FROM CUSTOMERS WHERE id > 5  -- Delete all the rows which has id grreater than 5.
+/*
+	Note :- 1. Always use where to avoid deleting all rows unintentionally
+			2. Best practice is to check the row before delete
+			   to check use select query with where clause 
+*/
+TRUNCATE TABLE PERSONS; -- Much faster than delete 
+
+--===================================================================	
