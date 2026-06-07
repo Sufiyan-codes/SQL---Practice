@@ -217,9 +217,72 @@ DELETE FROM CUSTOMERS WHERE id > 5  -- Delete all the rows which has id grreater
 */
 TRUNCATE TABLE PERSONS; -- Much faster than delete 
 
---===================================================================
---===================================================================
+--===================================================================	
 
+---- OPERATORS ----
+
+-- 1) COMPARISION :- '=' , '<> !=' , '<' , '<=' , '>' , '>='
+-- 2) LOGICAL :- 'AND' , 'OR' , 'NOT'
+-- 3) RANGE :- 'BETWEEN'
+-- 4) MEMBERSHIP :- 'IN' , 'NOT IN'
+-- 5) SEARCH :- 'LIKE'
+
+--==========================================================================================
+-----------------------------  AND , OR , NOT  ---------------------------------------------
+
+-- Retrieve all the customers who are from USA and have a score greater than 500
+SELECT * FROM CUSTOMERS WHERE country = 'USA' AND score > 500;
+
+-- Retrieve all the customers who are either from USA or have a score greater than 500
+SELECT * FROM CUSTOMERS WHERE country = 'USA' OR score > 500;
+
+-- Retrieve all the customers with a score not less than 500
+SELECT * FROM CUSTOMERS WHERE NOT score < 500;
+
+
+------------------------------   BETWEEN   -----------------------------
+
+-- Retrieve all the customers whose score falls in the range between 100 and 500
+SELECT * FROM CUSTOMERS WHERE score BETWEEN 100 AND 500;
+SELECT * FROM CUSTOMERS WHERE score >= 100 AND score <= 500;  -- You can use OR operator also
+
+
+------------------------------  MEMBERSHIP  -----------------------------
+
+-- Retrieve all customers from either germany OR USA.
+/*
+	Note :- Use 'IN' instead of 'OR' for multiple values
+			in the same column to simplify SQL.
+*/
+SELECT * FROM CUSTOMERS WHERE COUNTRY IN('Germany','USA');
+-- Reverse if 'IN' is 'NOT IN'
+SELECT * FROM CUSTOMERS WHERE COUNTRY NOT IN('Germany','USA'); -- all the customers which are not from either Germany or USA
+
+
+---------------------------  SEARCH  ---------------------------
+
+/*
+	Note :- 'LIKE' seacrh for a patterns in text and uses '%' , '_' 
+
+	'%' -> 1) 'M%' - Returns the text which starts from 'M' doesn't matter what is after 'M'
+		   2) '%n' - Returns the text which ends with 'n' doesn't matter what is before 'n'
+		   3) '%n%' - Returns the text which has 'n' in between and doesn't matter where does it start and end.
+
+	'_' -> 1) '_b%' - Returns the text only and only if it has 'b' on 2nd position 
+*/
+
+-- Find all customers whose 1st name start with 'M'
+SELECT * FROM CUSTOMERS WHERE first_name LIKE 'M%';
+-- Find all customers whose name ends with 'n'
+SELECT * FROM CUSTOMERS WHERE first_name LIKE '%n';
+-- Find all customers whose name contains 'r' in it
+SELECT * FROM CUSTOMERS WHERE first_name LIKE '%r%';
+
+-- Find all customers whose name has 'r' in the 3rd position
+SELECT * FROM CUSTOMERS WHERE first_name LIKE '__r%';
+ 
+
+--==========================================================================================
 
 
 
