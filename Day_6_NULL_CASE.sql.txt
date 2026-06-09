@@ -1,0 +1,138 @@
+--====================================================================================================
+
+--------  DAY 6 :- NULL FUNCTIONS  --------
+
+--1) COALESCE :- Returns the first non-null value from a list
+SELECT * FROM SALES.CUSTOMERS;
+
+-- Find the avg score for a customers
+SELECT customerid, firstname,
+AVG(COALESCE(score,0)) OVER() AVG_SCORE
+FROM sales.customers;
+
+/* 
+	Display the firstname of custoemrs in a single field by merging their first and lastname,
+	and add 10 bonus points to each customers score.
+	'Handle NULL values too'
+*/
+SELECT 
+firstname, lastname, score,
+COALESCE(firstname, ' ') || ' ' || COALESCE(lastname,' ') AS Full_name,
+COALESCE(score, 0) + 10 AS Bonus_score
+FROM sales.customers;
+
+-- Sort the customers from higest to lowest score, with nulls apperaing last
+SELECT customerid,
+firstname || lastname As FUll_name,
+COALESCE(score, 0)
+FROM sales.customers
+ORDER BY COALESCE(score, 0) DESC;
+
+
+--2) NULLIF :- Compares two expression returns, NULL if they are equal, if not returns first value.
+SELECT * FROM sales.orders;
+
+-- Preventing Division by 0, find sales/quantity
+SELECT
+customerid,
+sales, quantity,
+NULLIF(sales, 0) / NULLIF(quantity, 0) AS sales_per_unit -- If sales or quantity is 0 REPLACE them with NULL value.
+FROM sales.orders;
+
+-- Also can be used to check if order price is equal to discount price.
+
+
+--3) IS NULL :- Returns TRUE if a value is NULL and FALSE if its not a NULL
+
+-- Find customers whos score is NULL
+SELECT firstname, lastname
+FROM sales.customers
+WHERE score IS NULL;
+
+
+--4) IS NOT NULL :- Returns TRUE if a value is not NULL and FALSE if its a NULL
+
+-- Find customers whos score is NOT NULL
+SELECT firstname, lastname
+FROM sales.customers
+WHERE score IS NOT NULL;
+
+---- USE CASES ----
+-- FILTERING DATA :- Searching for missing or NULL information
+-- ANIT JOINS :- Use to find the data of left, right table using where clause on seconndary tabel like where cusid IS NULL. 
+
+
+--------  CASE STATEMENT  --------
+
+-- Evalutes a list of condition and retruns a value when a condition is met
+
+----  USE CASES  ----
+
+--1) CATWGORING DATA :- Group the data based on different categories based on certain conditions
+/*
+	Note :- Generate a report showing the total sales for each category
+				- HIGH IF SCORE > 50
+				- MEDIUM IF SCORE > 20
+				- LOW IF SCORE < 2
+*/
+SELECT * from sales.orders LIMIT 3;
+
+SELECT category,
+SUM(sales) AS Total_Sales
+FROM(
+	SELECT sales,
+	CASE
+		WHEN sales > 50 THEN 'HIGH'	
+		WHEN sales > 20 THEN 'MEDIUM'	
+		ELSE 'LOW'	
+	END AS category
+	FROM sales.orders
+) AS categorised_orders
+GROUP BY category
+ORDER BY TOTAL_Sales DESC;
+
+--2) MAPPING :- Transfrom the value from one form to another form
+
+-- Retrieve employee detail with genders displayed as full text 
+SELECT * FROM SALES.EMPLOYEES;
+
+SELECT 
+	firstname, lastname, department, gender,
+CASE
+	WHEN gender = 'M' THEN 'MALE'
+	WHEN gender = 'F' THEN 'FEMALE'
+	ELSE 'N/A'
+END AS GENDERS
+FROM sales.employees;
+
+
+--3) HANDLING NULLS :- Replace NULLs with a specific value
+
+-- Find avg score of customers and treat NULLs as 0
+
+SELECT customerid, lastname,
+AVG(
+	CASE
+		WHEN score IS NULL THEN 0
+		ELSE score
+	END 
+) OVER() AVG_SCORE
+FROM sales.customers;
+
+
+--4) CONDITIONAL AGGREGATE :- Apply aggregation functions only on subsets of data that fullfil certain condition
+
+-- Count how many time each customer has made an order with sales greater than 30
+
+SELECT customerid,
+SUM(
+	CASE
+		WHEN sales > 30 THEN 1
+		ELSE 0
+	END
+) TOTAL_COUNT
+FROM sales.orders
+GROUP BY customerid;
+
+
+--==============================================================================================================
