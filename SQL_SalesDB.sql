@@ -762,8 +762,147 @@ SUM(
 FROM sales.orders
 GROUP BY customerid;
 
-
 --==============================================================================================================
+
+
+----  DAY 7 :- AGGREGATION AND WINDOWS FUNCTION  ----
+
+---- Aggregation  ----
+
+--1) COUNT() :- Find the total no of Orders
+SELECT COUNT(orderid) FROM SALES.ORDERS;
+
+--2) SUM() :- Find the total sales of all Orders
+SELECT SUM(sales) AS Total_Sales FROM SALES.ORDERS;
+
+--3) AVG() :- Find the average sales of all orders
+SELECT AVG(sales) AS AVG_SALES FROM SALES.ORDERS;
+
+--4) MAX() :- Find the highest sales of all orders
+SELECT MAX(sales) AS MAX_SALES FROM SALES.ORDERS;
+
+--5) MIN() :- Find the LOWEST sales of all orders
+SELECT MIN(sales) AS MIN_SALES FROM SALES.ORDERS;
+
+
+----  BASIC WINDOW FUNCTIONS  ----
+
+--1) OVER() :- IT is used to tell SQL we are using windows function
+/*
+	Note :- Find the total_sales across all orders -> SUM(sales)
+			Find the total_slaes for each product -> GROUP BY productid
+			Fint the total_Sales for each product, 
+			additionally provide details such as
+			order id and order date
+*/
+SELECT SUM(sales) FROM SALES.ORDERS; -- 1
+SELECT productid, SUM(sales) FROM SALES.ORDERS GROUP BY productid; -- 2
+SELECT    -- 3 
+	productid, 
+	orderid, 
+	orderdate,
+SUM(sales)
+OVER(PARTITION BY productid) TOTAL_SALES
+FROM SALES.ORDERS;
+
+
+----  OVER() -> PARTITION BY :- USED TO GROUP DATA WITHOUT LOSING DETAILS  ----
+
+-- Find the total sales across all orders additionally provide details such orderid, orderdate.
+SELECT productid, orderid, orderdate,
+SUM(sales)
+OVER(PARTITION BY productid)
+FROM SALES.ORDERS;
+
+-- Additionally find total_sales for each combination of productid and order status
+SELECT productid, orderid, orderdate, orderstatus,
+SUM(sales)
+OVER(PARTITION BY productid, orderstatus)
+FROM SALES.ORDERS;
+
+
+----  OVER() -> ORDER BY :- USED TO SORT DATA WITHIN A WINDOW  ----
+/*
+	Note :- Without RANK() it can't be used
+			Ranks each order based on their sales from highest to lowest
+*/
+-- Find the rank of sales by order, additionally give orderid, orderdate
+SELECT orderid, orderdate, sales,
+RANK() OVER(ORDER BY sales DESC) SALES_RANK
+FROM SALES.ORDERS;
+
+
+----  OVER() -> FRAME :- DEFINES SUBSET OF ROWS WITHIN EACH WINDOWS THAT IS RELEVANT FOR THE CALCULATION  ----
+/*
+	Note :- Frame clause can only be used together with ORDER BY clause
+			LOWER value must be before HIGHER value
+*/
+
+----  TYPES OF FRAMES  ----
+
+--1) CURRENT ROW AND 2 FOLLOWING
+-- N-FOLLOWING :- nth row after the current row
+
+SELECT productid, sales,
+SUM(sales)
+OVER(ORDER BY PRODUCTID ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING) FOLLOWING_SALES
+FROM SALES.ORDERS; 
+
+
+--2) CURRENT ROW AND UNBOUNDED FOLLOWING
+-- UNBOUNDED-FOLLOWING :- The last possible row within a window
+
+SELECT productid, sales,
+SUM(sales)
+OVER(ORDER BY PRODUCTID ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) FOLLOWING_SALES
+FROM SALES.ORDERS; 
+
+
+--3) N-PRECEDING AND CURRENT ROW
+-- N-PRECEDING :- The N-ROW before the current row
+
+SELECT productid, sales,
+SUM(sales)
+OVER(ORDER BY PRODUCTID ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) FOLLOWING_SALES
+FROM SALES.ORDERS; 
+
+
+--4) UNBOUNDED-PRECEDING
+-- UNBOUNDED-PRECEDING :- The FIRST possible row within a window 
+
+SELECT productid, sales,
+SUM(sales)
+OVER(ORDER BY PRODUCTID ROWS UNBOUNDED PRECEDING) FOLLOWING_SALES
+FROM SALES.ORDERS; 
+
+
+--5) N-PRECEDING AND N-FOLLOWING
+-- N-ROW BEFORE AND N-ROW AFTER THE CURRENT ROW
+
+SELECT productid, sales,
+SUM(sales)
+OVER(ORDER BY PRODUCTID ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) FOLLOWING_SALES
+FROM SALES.ORDERS;
+
+
+--6) UNBOUNDED-PRECEDING AND UNBOUNDED-FOLLOWING
+-- UP AND UF :- FIRST POSSIBLE ROW AND LAST POSSIBLE ROW WITHIN A WINDOW 
+
+SELECT productid, sales,
+SUM(sales)
+OVER(ORDER BY PRODUCTID ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) FOLLOWING_SALES
+FROM SALES.ORDERS;
+
+
+--=========================================================================================================
+
+
+
+
+
+
+
+
 
 
 
