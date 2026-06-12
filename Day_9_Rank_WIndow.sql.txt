@@ -1,0 +1,147 @@
+--============================================================================================================
+
+
+----  DAY 9 :- RANK WINDOW FUNCTIONS  ----
+
+----  Integer Based Ranking  ----
+
+--1) ROW_NUMBER() :- Assign a unique number to each row, it doens't handle tie's.
+
+-- Rank the orders based on their sales from highest to lowest
+SELECT orderid, sales,
+ROW_NUMBER() OVER(ORDER BY sales DESC) RANK_SALES
+FROM sales.orders;
+
+
+--2) RANK() :- Assign a rank to each row, It handles tie and leaves gaps in ranking
+
+--Rank orders based on their sales from Max-Min
+SELECT orderid, sales,
+RANK() OVER(ORDER BY sales DESC) RANK_BY_SALES
+FROM SALES.ORDERS;
+
+
+--3) DENSE_RANK() :- Assign a rank to each row, It handles tie and doesn't leave gap in ranking.
+
+--Rank orders based on their sales from Max-Min
+SELECT orderid, sales,
+DENSE_RANK() OVER(ORDER BY sales DESC) RANK_BY_SALES
+FROM SALES.ORDERS;
+
+
+---- USE CASES ----
+
+--Find the top hIghest sales for each product  --- TOP N ANALYSIS
+SELECT orderid, sales, PRODUCTID, 
+DENSE_RANK() OVER(PARTITION BY PRODUCTID ORDER BY sales) TOP_SALES_BY_PRODUCT
+FROM SALES.ORDERS;
+
+-- We need only highest sales
+SELECT *
+FROM(
+	SELECT orderid, sales, PRODUCTID, 
+	DENSE_RANK() OVER(PARTITION BY PRODUCTID ORDER BY sales) TOP_SALES_BY_PRODUCT
+	FROM SALES.ORDERS
+) WHERE TOP_SALES_BY_PRODUCT = 1;
+
+
+--Find the lowest 2 customers based on total sales   --- BOTTOM N ANALYSIS
+SELECT *
+FROM(
+	SELECT customerid,
+	SUM(sales),
+	ROW_NUMBER() OVER(ORDER BY SUM(SALES)) LEAST_SALES_BY_CUSTOMERS
+	FROM SALES.ORDERS
+	GROUP BY customerid
+) WHERE LEAST_SALES_BY_CUSTOMERS <= 2;  -- Used to extract the lowest 2 sales by customerid
+ 
+select SUM(SALES) from sales.orders WHERE customerid = 4  -- VERIFIED THE TOTAL
+
+
+---- USES CASES ----
+
+-- Assign unique IDs to the rows of the orderarchieve table   --- UNIQUE IDs
+SELECT * FROM SALES.ORDERSARCHIVE;
+
+SELECT *,
+ROW_NUMBER() OVER(ORDER BY orderid) UNIQUE_ID
+FROM sales.ordersarchive;
+
+--Identify the Duplicates row in a table orderaarchive and return a clean result without any duplicates  -- IDENTIFY DUPLICATES
+
+/*
+	Note :- Use order by DESC on timestamp to ranks them based on what was the
+			last status of the order
+*/
+SELECT *
+FROM(
+	SELECT *,
+	ROW_NUMBER() OVER(PARTITION BY orderid ORDER BY creationtime DESC) NO_DUPLICATES
+	FROM SALES.ORDERSARCHIVE
+) WHERE NO_DUPLICATES <= 1;
+
+
+--4) NTILE() :- Diveds the row into a sepecified number of apprximately each group
+
+--- USE CASE ---
+
+--Segment all orders into 3 categories high, medium, and low sales --- DATA SEGMENTATION
+SELECT *,
+CASE
+	WHEN BUCKETS = 1 THEN 'HIGH'
+	WHEN BUCKETS = 2 THEN 'MEDIUM'
+	WHEN BUCKETS = 3 THEN 'LOW'
+END
+FROM(
+	SELECT customerid, sales, PRODUCTID,
+	NTILE(3) OVER(ORDER BY sales DESC) BUCKETS
+	FROM SALES.ORDERS
+)
+
+
+--In order to export the data divide the orders into 2 groups --- EQUALIZING LOAD PROCESING
+SELECT 
+NTILE(2) OVER(ORDER BY orderid) BUCKETS, --- always use PK
+*
+FROM SALES.ORDERS;
+
+
+----  PERCENTAGE BASED RANKING  ----
+
+--1) CUME_DIST() :- Cumulative distribution calculates the distribution of data points within a window
+
+-- FORMULA :- CUME_DIST = POSITION NUMBER / NUMBER OF ROWS
+
+SELECT CUSTOMERID, SALES,
+CUME_DIST() OVER(ORDER BY SALES DESC) PER_RANKING
+FROM SALES.ORDERS;
+
+
+--2) PERCENT_RANK() :- Calculate the relative position of each row
+
+-- FORMULA :- PERCENT_RANK = POSITION NUMBER -1 / NUMBER OF ROWS -1
+
+SELECT *,
+    CONCAT(ROUND(per_ranking::NUMERIC * 100, 2), '%') AS per_ranking_formatted
+FROM (
+    SELECT 
+        customerid, sales,
+        PERCENT_RANK() OVER(ORDER BY sales DESC) AS per_ranking
+    FROM sales.orders
+) AS subquery;
+
+
+-- Find the product that fall within the highest 40% of the points
+SELECT *,
+    CONCAT(ROUND(per_ranking::NUMERIC * 100, 2), '%') AS per_ranking_formatted
+FROM (
+    SELECT 
+        customerid, sales,
+        PERCENT_RANK() OVER(ORDER BY sales DESC) AS per_ranking
+    FROM sales.orders
+) AS subquery WHERE per_ranking < 0.4; 
+
+
+--=============================================================================================================
+
+
