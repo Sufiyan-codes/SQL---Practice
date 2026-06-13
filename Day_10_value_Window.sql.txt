@@ -1,0 +1,88 @@
+--=============================================================================================================
+
+----  DAY 10 :- WINDOW VALUE FUNCTIONS  ---- 
+
+--1) LEAD() :- Access a value from the next row within a window
+
+--Find sales of next mont
+SELECT orderid, productid, sales,  
+LEAD(sales,1,0) OVER(PARTITION BY productid ORDER BY creationtime)
+FROM SALES.ORDERS;
+
+
+--2) LAG() :- Access a value from the PREVIOUS row within a window
+
+--Find sales of next mont
+SELECT orderid, productid, sales,  
+LEAD(sales,1,0) OVER(PARTITION BY productid ORDER BY creationtime)
+FROM SALES.ORDERS;
+
+--Analyze the month over month (MOM) performance by finding the 
+--percentage change in sales between the current and previous month
+
+SELECT
+    *,
+    CurrentMonthSales - PreviousMonthSales AS MoM_Change,
+    ROUND(
+        CAST((CurrentMonthSales - PreviousMonthSales) AS NUMERIC) 
+        / PreviousMonthSales * 100, 1
+    ) AS MoM_Perc
+FROM (
+    SELECT
+        EXTRACT(MONTH FROM CREATIONTIME) AS OrderMonth,
+        SUM(Sales) AS CurrentMonthSales,
+        LAG(SUM(Sales)) OVER (ORDER BY EXTRACT(MONTH FROM CREATIONTIME)) AS PreviousMonthSales
+    FROM SALES.ORDERS
+    GROUP BY EXTRACT(MONTH FROM CREATIONTIME)
+)
+
+--Analyze customer loyalty by ranking customers based on the average number of days between orders
+SELECT
+CustomerID,
+AVG(DaysUntilNextOrder) AvgDays,
+RANK() OVER(ORDER BY COALESCE(AVG(DaysUntilNextOrder),999999)) RankAvg
+FROM(
+	SELECT
+	orderid,
+	customerid,
+	orderdate AS CurrentOrder,
+	LEAD(OrderDate) OVER(PARTITION BY customerid ORDER BY OrderDate) NextOrder,
+	LEAD(OrderDate) OVER(PARTITION BY customerid ORDER BY OrderDate) - orderdate AS DaysUntilNextOrder
+	FROM SALES.ORDERS
+	ORDER BY CUSTOMERID,ORDERDATE
+)
+GROUP BY CustomerID
+
+
+--3) FIRST_VALUE() :- Access a value from the first_row within a window
+
+SELECT orderid, sales, 
+FIRST_VALUE(SALES) OVER(ORDER BY EXTRACT(MONTH FROM CREATIONTIME))
+FROM SALES.ORDERS
+
+
+--4) LAST_VALUE() :- Access a value from the LAST_row within a window
+
+SELECT orderid, sales, 
+LAST_VALUE(SALES) OVER(ORDER BY EXTRACT(MONTH FROM CREATIONTIME))
+FROM SALES.ORDERS
+
+SELECT orderid, sales, 
+FIRST_VALUE(SALES) OVER(ORDER BY EXTRACT(MONTH FROM CREATIONTIME))
+FROM SALES.ORDERS
+
+--Find the lowest and highest sales from each product
+SELECT orderid, productid, sales,
+FIRST_VALUE(sales) OVER(PARTITION BY PRODUCTID ORDER BY SALES) LOWEST_SALES,
+LAST_VALUE(sales) OVER(PARTITION BY PRODUCTID ORDER BY SALES ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING) HIGHEST_SALES,
+FIRST_VALUE(sales) OVER(PARTITION BY PRODUCTID ORDER BY SALES DESC) HIGHEST_SALES_VALUE
+FROM SALES.ORDERS;
+
+
+/*
+	Note :- Use 'ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING' while using LAST_VALUE
+			OR -> you can use 
+			'FIRST_VALUE with DESCENDING order to make it LAST_VALUE'
+*/
+
+--========================================================================================================
