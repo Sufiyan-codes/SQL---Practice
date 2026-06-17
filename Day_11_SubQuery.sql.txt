@@ -1,0 +1,132 @@
+----  Day 11 :- SUBQUERY  ----
+
+---- RESULT TYPE ----
+
+--1) SCALAR SUBQUERY :- SINGLE VALUE
+SELECT ROUND(AVG(SALES),2) FROM SALES.ORDERS;
+
+--2) ROW :- MULTIPLE ROW AND SINGLE COLUMN
+SELECT FIRSTNAME FROM SALES.CUSTOMERS;
+
+--3) TABLE SUBQUERY :- MULTIPLE ROW AND MULTIPLE COLUMNS
+SELECT CUSTOMERID, FIRSTNAME, LASTNAME FROM SALES.CUSTOMERS;
+
+
+---- LOCATION / CLAUSES ----
+
+--1) FROM :- Used as temporary table for the main query
+
+--find the product that have a price higher than the average price of all products
+SELECT *
+FROM (
+		SELECT PRODUCTID, PRICE, ROUND(AVG(PRICE) OVER(),2) AVGPRICE FROM SALES.PRODUCTS
+) A
+WHERE PRICE > AVGPRICE
+
+--Rank customers based on their ammount of sales
+SELECT *,
+RANK() OVER(ORDER BY TOTAL_SALES DESC )
+FROM(
+	SELECT CUSTOMERID, SUM(SALES) AS TOTAL_SALES
+	FROM SALES.ORDERS
+	GROUP BY CUSTOMERID
+	)
+
+--2) SELECT :- Used to aggregate data side by side with the main query data aloowing for direct comparison
+
+--RULE :- ONLY SCALAR SUBQUERY ARE ALLOWED TO BE USED
+
+--Show the productid, names, price, and total numbers of orders
+SELECT PRODUCTID, PRODUCT, 
+	   PRICE, 
+	   (SELECT COUNT(*) FROM SALES.ORDERS)  TOTAL_ORDERS
+FROM SALES.PRODUCTS;
+
+--3) JOINS :- Used to prepare the data (filtering or aggregation) before joining it with other tables.
+
+--Show all customers details and find total orders of each customers
+SELECT C.CUSTOMERID, C.FIRSTNAME,O.TOTAL_ORDERS
+FROM SALES.CUSTOMERS C
+LEFT JOIN (
+			SELECT CUSTOMERID, COUNT(*) TOTAL_ORDERS FROM SALES.ORDERS GROUP BY CUSTOMERID
+		  ) O 
+ON C.CUSTOMERID = O.CUSTOMERID
+
+
+--4) WHERE :- Used for complex filtering logic and makes query more flexible and dynamic
+
+--- TYPES OF WHERE OPERATOR ---
+
+--1) COMPARISON OPERATOR :- Ussed to filter data by comparing two values
+
+-- RULE :- ONLY SCALAR SUBQUERIES ARE ALLOWED TO BE USED
+
+--Find the products that have a price higher than the average price of all products
+SELECT PRODUCTS, PRICE
+FROM SALES.PRODUCTS
+WHERE PRICE > (SELECT AVG(PRICE) FROM SALES.PRODUCTS)
+
+--2) LOGICAL OPERATOR :-
+
+-- 'IN' 
+
+--Show the details of orders made by customers in germany
+SELECT *
+FROM SALES.ORDERS
+WHERE CUSTOMERID IN(
+					SELECT CUSTOMERID FROM SALES.CUSTOMERS WHERE COUNTRY = 'Germany'
+					)
+
+--Show the details of orders made by customers NOT in germany
+SELECT *
+FROM SALES.ORDERS
+WHERE CUSTOMERID NOT IN(
+					SELECT CUSTOMERID FROM SALES.CUSTOMERS WHERE COUNTRY = 'Germany'
+					)
+
+-- LOGICAL OPERATOR --> 'ANY' :- CHECKS IF A VALUE MATCHES ANY VALUE WHITHIN A LIST
+
+--Find female employees whose salary are greater than the salary of any male employee
+SELECT EMPLOYEEID, FIRSTNAME, SALARY
+FROM SALES.EMPLOYEES
+WHERE GENDER = 'F' 
+AND
+SALARY > ANY (SELECT SALARY FROM SALES.EMPLOYEES WHERE GENDER = 'M')
+
+
+-- LOGICAL OPERATOR --> 'ANY' :- CHECKS IF A VALUE MATCHES ALL VALUE WHITHIN A LIST
+
+--Find female employees whose salary are greater than the salary of ALL male employee
+SELECT EMPLOYEEID, FIRSTNAME, SALARY
+FROM SALES.EMPLOYEES
+WHERE GENDER = 'F' 
+AND
+SALARY > ALL (SELECT SALARY FROM SALES.EMPLOYEES WHERE GENDER = 'M')
+
+
+-- LOGICAL OPERATOR --> 'EXISTS' :- Checks if a subquery returns any value
+
+-- Show all orders details for customers in Germany
+SELECT *
+FROM SALES.ORDERS O
+WHERE EXISTS (
+			 SELECT 1
+			 FROM SALES.CUSTOMERS C
+			 WHERE COUNTRY = 'GERMANY'
+			 AND
+			 O.CUSTOMERID = C.CUSTOMERID
+)
+
+-- Show all orders details for customers NOT in Germany
+SELECT *
+FROM SALES.ORDERS O
+WHERE NOT EXISTS (
+			 SELECT 1
+			 FROM SALES.CUSTOMERS C
+			 WHERE COUNTRY = 'GERMANY'
+			 AND
+			 O.CUSTOMERID = C.CUSTOMERID
+)
+
+
+--==================================================================================================================
