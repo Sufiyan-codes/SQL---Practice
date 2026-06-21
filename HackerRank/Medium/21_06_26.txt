@@ -1,0 +1,43 @@
+A median is defined as a number separating the higher half of a data set from the lower half. Query the median of the Northern Latitudes (LAT_N) from STATION and round your answer to  decimal places.
+
+SELECT ROUND(LAT_N, 4)
+FROM (
+    SELECT LAT_N, ROW_NUMBER() OVER(ORDER BY LAT_N) AS RN
+    FROM STATION
+) RANKED
+WHERE RN = (
+    SELECT (COUNT(LAT_N) + 1) / 2
+    FROM STATION
+);
+
+
+
+Given the table schemas below, write a query to print the company_code, founder name, total number of lead managers, total number of senior managers, total number of managers, and total number of employees. Order your output by ascending company_code.
+
+Note:
+
+The tables may contain duplicate records.
+The company_code is string, so the sorting should not be numeric. For example, if the company_codes are C_1, C_2, and C_10, then the ascending company_codes will be C_1, C_10, and C_2.
+
+SELECT 
+    C.COMPANY_CODE,
+    C.FOUNDER,
+    COUNT(DISTINCT L.LEAD_MANAGER_CODE) TOTAL_LEAD_MANAGER,
+    COUNT(DISTINCT S.SENIOR_MANAGER_CODE) TOTAL_SENIOR,
+    COUNT(DISTINCT M.MANAGER_CODE) TOTAL_MANAGER,
+    COUNT(DISTINCT E.EMPLOYEE_CODE) TOTAL_EMPLOYEE
+FROM COMPANY AS C
+LEFT JOIN LEAD_MANAGER AS L
+ON C.COMPANY_CODE = L.COMPANY_CODE
+
+LEFT JOIN SENIOR_MANAGER AS S
+ON C.COMPANY_CODE = S.COMPANY_CODE
+
+LEFT JOIN MANAGER AS M
+ON C.COMPANY_CODE = M.COMPANY_CODE
+
+LEFT JOIN EMPLOYEE AS E
+ON C.COMPANY_CODE = E.COMPANY_CODE
+
+GROUP BY C.COMPANY_CODE, C.FOUNDER
+ORDER BY C.COMPANY_CODE ASC
