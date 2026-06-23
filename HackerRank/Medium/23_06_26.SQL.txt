@@ -1,0 +1,35 @@
+--Query a count of the number of cities in CITY having a Population larger 100000 than .
+
+SELECT 
+    COUNT(NAME) 
+FROM CITY
+WHERE POPULATION > 100000 
+
+
+--Query the total population of all cities in CITY where District is California.
+
+SELECT
+    SUM(POPULATION)
+FROM CITY
+WHERE DISTRICT = 'CALIFORNIA'
+
+
+--Query the average population of all cities in CITY where District is California.
+
+SELECT
+    AVG(POPULATION)
+FROM CITY
+WHERE DISTRICT = 'CALIFORNIA'
+
+--Query the average population for all cities in CITY, rounded down to the nearest integer.
+
+SELECT
+    ROUND(AVG(POPULATION),0)
+FROM CITY
+
+--Query the sum of the populations for all Japanese cities in CITY. The COUNTRYCODE for Japan is JPN.
+
+SELECT 
+    SUM(POPULATION)
+FROM CITY
+WHERE COUNTRYCODE = 'JPN'
